@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Dec 25 20:39:43 2020
+
+@author: Petr
+"""
+
+import time
+
 def main():
     layout = get_input()
     part1(layout)
@@ -116,6 +125,22 @@ def is_valid_coord(layout, coord):
     elif coord[1] >= len(layout[0]):
         return False
     else:
-        return True    
+        return True
 
+    # for elem in methods:
+    #     i2 = i
+    #     j2 = j
+    #     while True:
+    #         i2 += elem[0]
+    #         j2 += elem[1]
+    #         if i2 >= 0 and i2 < len(layout) and j2 >=0 and j2 < len(layout[0]):
+    #             if layout[i2][j2] == "#":
+    #                 occupied_neighbours += 1
+    #                 break
+    #         else:
+    #             break
+    
+
+start_time = time.time()
 main()
+print("--- %s seconds ---" % (time.time() - start_time))
