@@ -14,7 +14,7 @@ def main():
     return
 
 def get_initial_input():
-    f = open("input2.txt", "r")
+    f = open("input.txt", "r")
     tiles = {}
     for line in f:
         if line[0] == "T":
@@ -165,19 +165,22 @@ def part2(tiles, tiles_numbers, shody, corners):
                     g.addEdge(Edge(str(rider), str(key)))
     create_border(grid, corners, g)
     fill_in_lines(grid, corners, g)
-    print(grid)
+    # print(grid)
     rotation_grid = create_empty_grid(int(math.sqrt(len(tiles))), "X")
     determine_first_tile_rotation(tiles_numbers, grid, rotation_grid)
     # rotation_grid[0][0] = 4
     determine_first_line_orientation(tiles_numbers, grid, rotation_grid)
     determine_other_lines(tiles_numbers, grid, rotation_grid)
-    print(rotation_grid)
+    # print(rotation_grid)
     # orientations = determine_orientations(grid, tiles_numbers)    
     big_grid = create_big_square(len(grid), len(tiles[corners[0]]) - 2)   
     populate_big_grid(big_grid, grid, tiles, rotation_grid, tiles_numbers)
-    print(big_grid)
+    # print(big_grid)
     # insert_squares(tiles, grid, rotation_grid)
-
+    roughnss = search_for_monster(big_grid)
+    if roughnss == 0:
+        roughnss = search_for_monster(flip_grid(big_grid))
+    print(roughnss)
     # print(corners)
     # print(grid[0][0])
     # print(tiles_numbers[int(grid[0][0])])
@@ -192,8 +195,59 @@ def part2(tiles, tiles_numbers, shody, corners):
     # print(big_grid)
     return
 
+def search_for_monster(big_grid):
+    for x in range(4):
+        monsters_coords = []
+        monsters_found = 0
+        for i in range(len(big_grid)):
+            for j in range(len(big_grid)):
+                if big_grid[i][j] == "1":
+                    try:
+                        if big_grid[i+1][j-18] == "1" and big_grid[i+1][j-13] == "1" and big_grid[i+1][j-12] == "1" and big_grid[i+1][j-7] == "1" and big_grid[i+1][j-6] == "1" and big_grid[i+1][j-1] == "1" and big_grid[i+1][j] == "1" and big_grid[i+1][j+1] == "1" and big_grid[i+2][j-17] == "1" and big_grid[i+2][j-14] == "1" and big_grid[i+2][j-11] == "1" and big_grid[i+2][j-8] == "1" and big_grid[i+2][j-5] == "1" and big_grid[i+2][j-2] == "1":
+                            monsters_coords.append([i,j])
+                            monsters_found += 1
+                    except:
+                        continue
+        if monsters_found == 0:
+            big_grid = rotate_grid(big_grid)
+        else:
+            identify_monsters(big_grid, monsters_coords)
+            rougness = measure_roughness(big_grid)
+            return rougness
+    
+    return 0
+
+def identify_monsters(big_grid, monsters_coords):
+    for elem in monsters_coords:
+        i = elem[0]
+        j = elem[1]
+        big_grid[i][j] = "M"
+        big_grid[i+1][j-18] = "M"
+        big_grid[i+1][j-13] = "M"
+        big_grid[i+1][j-12] = "M"
+        big_grid[i+1][j-7] = "M"
+        big_grid[i+1][j-6] = "M"
+        big_grid[i+1][j-1] = "M"
+        big_grid[i+1][j] = "M"
+        big_grid[i+1][j+1] = "M"
+        big_grid[i+2][j-17] = "M"
+        big_grid[i+2][j-14] = "M"
+        big_grid[i+2][j-11] = "M"
+        big_grid[i+2][j-8] = "M"
+        big_grid[i+2][j-5] = "M"
+        big_grid[i+2][j-2] = "M"
+    return
+
+def measure_roughness(big_grid):
+    rougness = 0
+    for elem in big_grid:
+        for item in elem:
+            if item == "1":
+                rougness +=1
+    return rougness
+        
 def determine_first_tile_rotation (tiles_numbers, grid, rotation_grid):
-    rotation = 4
+    rotation = 0
     next_tiles = [item for sublist in tiles_numbers[int(grid[0][1])] for item in sublist]
     # Full version
     # first_cube_numbers = [tiles_numbers[int(grid[0][0])][0][1], tiles_numbers[int(grid[0][0])][0][2], tiles_numbers[int(grid[0][0])][0][3], tiles_numbers[int(grid[0][0])][0][0], tiles_numbers[int(grid[0][0])][1][1], tiles_numbers[int(grid[0][0])][1][2], tiles_numbers[int(grid[0][0])][1][3], tiles_numbers[int(grid[0][0])][1][0]]
