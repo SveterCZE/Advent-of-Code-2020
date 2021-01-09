@@ -134,10 +134,11 @@ def shortestPath(graph, start, end, toPrint = False):
 
 def part2(tiles, tiles_numbers, shody, corners):
     # Dirty fix to manually adjust corners in a way that allows for 
-    corners = [corners[2], corners[1], corners[3], corners[0]]
+    # corners = [corners[2], corners[1], corners[3], corners[0]]
+    corners = [corners[0], corners[3], corners[1], corners[2]]
     tiles_numbers_non_rotated = {}
     tiles_numbers_rotated = {}
-    grid = create_empty_grid(int(math.sqrt(len(tiles))))
+    grid = create_empty_grid(int(math.sqrt(len(tiles))), "X")
     # print(grid)
     for key, value in tiles_numbers.items():
         tiles_numbers_non_rotated[key] = value[0]
@@ -156,28 +157,188 @@ def part2(tiles, tiles_numbers, shody, corners):
         for elem in tiles_numbers_non_rotated[rider]:
             for key, value in tiles_numbers_non_rotated.items():
                 if elem in value and key != rider:
-                    # print("S kostickou", rider, "muze sousedit kosticka", key, "protoze maji shodne strany", elem, value)
+                    # print("(non-rotated) S kostickou", rider, "muze sousedit kosticka", key, "protoze maji shodne strany", elem, value)
                     g.addEdge(Edge(str(rider), str(key)))
             for key, value in tiles_numbers_rotated.items():
                 if elem in value and key != rider:
-                    # print("S kostickou", rider, "muze sousedit kosticka", key, "protoze maji shodne strany", elem, value)
+                    # print("(rotated)S kostickou", rider, "muze sousedit kosticka", key, "protoze maji shodne strany", elem, value)
                     g.addEdge(Edge(str(rider), str(key)))
     create_border(grid, corners, g)
     fill_in_lines(grid, corners, g)
+    print(grid)
+    rotation_grid = create_empty_grid(int(math.sqrt(len(tiles))), "X")
+    determine_first_tile_rotation(tiles_numbers, grid, rotation_grid)
+    # rotation_grid[0][0] = 4
+    determine_first_line_orientation(tiles_numbers, grid, rotation_grid)
+    determine_other_lines(tiles_numbers, grid, rotation_grid)
+    print(rotation_grid)
+    # orientations = determine_orientations(grid, tiles_numbers)    
     big_grid = create_big_square(len(grid), len(tiles[corners[0]]) - 2)   
-    populate_big_grid(big_grid, grid, tiles)
-    print(corners)
-    print(grid[0][0])
-    print(tiles_numbers[int(grid[0][0])])
-    print(grid[0][1])
-    print(tiles_numbers[int(grid[0][1])])
-    print(grid[1][0])
-    print(tiles_numbers[int(grid[1][0])])
-    print(grid[2][0])
-    print(tiles_numbers[int(grid[2][0])])
+    populate_big_grid(big_grid, grid, tiles, rotation_grid, tiles_numbers)
+    print(big_grid)
+    # insert_squares(tiles, grid, rotation_grid)
+
+    # print(corners)
+    # print(grid[0][0])
+    # print(tiles_numbers[int(grid[0][0])])
+    # # print([item for sublist in tiles_numbers[int(grid[0][0])] for item in sublist])
+    # print(grid[0][1])
+    # print(tiles_numbers[int(grid[0][1])])
+    # # print(grid[1][0])
+    # print(tiles_numbers[int(grid[1][0])])
+    # print(grid[2][0])
+    # print(tiles_numbers[int(grid[2][0])])
     # print(grid)
     # print(big_grid)
     return
+
+def determine_first_tile_rotation (tiles_numbers, grid, rotation_grid):
+    rotation = 4
+    next_tiles = [item for sublist in tiles_numbers[int(grid[0][1])] for item in sublist]
+    # Full version
+    # first_cube_numbers = [tiles_numbers[int(grid[0][0])][0][1], tiles_numbers[int(grid[0][0])][0][2], tiles_numbers[int(grid[0][0])][0][3], tiles_numbers[int(grid[0][0])][0][0], tiles_numbers[int(grid[0][0])][1][1], tiles_numbers[int(grid[0][0])][1][2], tiles_numbers[int(grid[0][0])][1][3], tiles_numbers[int(grid[0][0])][1][0]]
+    # I will use just one section
+    first_cube_numbers = [tiles_numbers[int(grid[0][0])][1][1], tiles_numbers[int(grid[0][0])][1][2], tiles_numbers[int(grid[0][0])][1][3], tiles_numbers[int(grid[0][0])][1][0]]
+    for elem in first_cube_numbers:        
+        if elem in next_tiles:
+                rotation_grid[0][0] = rotation
+        rotation += 1
+    return 0
+
+def determine_first_line_orientation (tiles_numbers, grid, rotation_grid):
+    # Iterate over every element other than the first one    
+    for i in range (1, len(grid[0][1:]) + 1):
+        # elem_list = [item for sublist in tiles_numbers[int(grid[0][i])] for item in sublist]
+        elem_list = [tiles_numbers[int(grid[0][i])][0][3], tiles_numbers[int(grid[0][i])][0][2], tiles_numbers[int(grid[0][i])][0][1], tiles_numbers[int(grid[0][i])][0][0], tiles_numbers[int(grid[0][i])][1][3], tiles_numbers[int(grid[0][i])][1][2], tiles_numbers[int(grid[0][i])][1][1], tiles_numbers[int(grid[0][i])][1][0]]
+        rotation = 0
+        # Check if the previous square is filpped or not
+        if rotation_grid[0][i-1] < 4:
+            previous_elem_list = tiles_numbers[int(grid[0][i - 1])][1]
+        else:
+            previous_elem_list = tiles_numbers[int(grid[0][i - 1])][0]
+        # Iterate over elems in the border numbers of the current tile to determine its orientation                
+        # print(elem_list)
+        # print(previous_elem_list)
+        # print(i, previous_elem_list, elem_list)
+        for elem in elem_list:
+            if elem in previous_elem_list:
+                rotation_grid[0][i] = rotation
+            rotation += 1        
+    return
+
+def determine_other_lines(tiles_numbers, grid, rotation_grid):
+    for i in range(1, len(grid[0][1:]) + 1):
+        for j in range (len(grid[0])):
+            # print(i,j)
+            rotation = 0
+            # DOPLNIT SPRAVNE PORADI PRO ROTACE
+            # elem_list = [item for sublist in tiles_numbers[int(grid[i][j])] for item in sublist]
+            elem_list = [tiles_numbers[int(grid[i][j])][0][0], tiles_numbers[int(grid[i][j])][0][3], tiles_numbers[int(grid[i][j])][0][2], tiles_numbers[int(grid[i][j])][0][1], tiles_numbers[int(grid[i][j])][1][0], tiles_numbers[int(grid[i][j])][1][3], tiles_numbers[int(grid[i][j])][1][2], tiles_numbers[int(grid[i][j])][1][1]]
+            if rotation_grid[i-1][j] < 4:
+                previous_elem_list = tiles_numbers[int(grid[i-1][j])][1]
+            else:
+                previous_elem_list = tiles_numbers[int(grid[i-1][j])][0]
+            for elem in elem_list:
+                if elem in previous_elem_list:
+                    # print(i,j, elem, elem_list, tiles_numbers[int(grid[i][j])], previous_elem_list)
+                    rotation_grid[i][j] = rotation
+                    # print("Je to tam")
+                rotation += 1 
+
+def populate_big_grid(big_grid, grid, tiles, rotation_grid, tiles_numbers):
+    for i in range(len(grid)):
+        for j in range(len(grid)):
+            insert_individual_tile(big_grid, tiles, len(grid), i, j, grid[i][j], rotation_grid)
+    
+
+def rotate_squares(tiles, rotation_grid, i, j, tile_no):
+    square_length = len(tiles[int(tile_no)])
+    # print(square_length)
+    # print(tiles)
+    template_grid = []
+    for x in range(square_length):
+        y_template = []
+        for y in range(square_length):
+            y_template.append(tiles[int(tile_no)][x][y])
+        template_grid.append(y_template)
+    if rotation_grid[i][j] > 3:
+        template_grid = flip_grid(template_grid)
+        rotation_grid[i][j] = rotation_grid[i][j] - 4
+    if rotation_grid[i][j] == 0:            
+        return template_grid
+    else:
+        for x in range(rotation_grid[i][j]):
+            template_grid = rotate_grid(template_grid)
+        
+        return template_grid
+        
+def rotate_grid(template_grid):
+    grid_len = len(template_grid)        
+    flipped_grid = []
+    for i in range(grid_len):
+        y_temp = []
+        for j in range(grid_len):
+            y_temp.append("x")
+        flipped_grid.append(y_temp)
+    for i in range(grid_len):
+        for j in range(grid_len):
+            flipped_grid[i][j] = template_grid[(grid_len-1) - j][i]
+    return flipped_grid
+
+def flip_grid(template_grid):
+    grid_len = len(template_grid)
+    flipped_grid = []
+    for i in reversed(range(grid_len)):
+        flipped_grid.append(template_grid[i])
+    return flipped_grid
+
+# def determine_orientations(grid, tiles_numbers):
+#     orientations = create_empty_grid(len(grid))    
+#     determine_first_tile_orientation(grid, tiles_numbers, orientations)
+#     determine_first_line_orientation(grid, tiles_numbers, orientations)
+#     determine_remaining_line_orientation(grid, tiles_numbers, orientations)
+#     print(orientations)
+#     return orientations
+
+# def determine_first_tile_orientation(grid, tiles_numbers, orientations):
+#     print(tiles_numbers)
+#     # first_tile_rider = tiles_numbers[int(grid[0][0])]
+#     # TADY CHCI DOPLNIT PEVNE 4, ABYCH SIMULOVAL VZOROVY PRIKLAD
+#     first_tile_rider = [item for sublist in tiles_numbers[int(grid[0][0])] for item in sublist]
+#     second_tile_rider = [item for sublist in tiles_numbers[int(grid[0][1])] for item in sublist]
+#     for i in range(len(first_tile_rider)):
+#         if first_tile_rider[i] in second_tile_rider:
+#                 orientations[0][0] = i + 3
+#                 # print("Pro prvni pozici volime orientaci", orientations[0][0])
+#                 return
+#         i += 1
+
+# def determine_first_line_orientation(grid, tiles_numbers, orientations):
+#     for i in range(1, len(grid)):
+#         # Urcime orientaci predchoziho ctverce
+#         previous_tile_orientation = orientations[0][i-1]
+#         # Urcime provazne cislo, je-li vetsi nez 3, kosticka je flinpnuta a divame se jen na druhou cast cisel, jinak jen na prvni
+#         if previous_tile_orientation <= 3:
+#             previous_tile_border_numbers = tiles_numbers[int(grid[0][i-1])][0]
+#         else:
+#             previous_tile_border_numbers = tiles_numbers[int(grid[0][i-1])][1]         
+#         # Create a list of all border numbers for current tile
+#         current_tile_border_numers = [item for sublist in tiles_numbers[int(grid[0][i])] for item in sublist]
+#         # Iterate over the numbers to determine which matches the border number of the previous tile
+#         for j in range(len(current_tile_border_numers)):
+#             if current_tile_border_numers[j] in previous_tile_border_numbers:
+#                 orientations[0][i] = j-3
+                
+# def determine_remaining_line_orientation(grid, tiles_numbers, orientations):
+#     print(grid)
+#     for i in range(1, len(grid)):
+#         for j in range(len(grid)):
+#             previous_tile_orientation = orientations[i-1][j]
+#             if previous_tile_orientation <= 3:
+#                 previous_tile_border_numbers = tiles_numbers[int(grid[i-1][j])][0]
+#             else:
+#                 previous_tile_border_numbers = tiles_numbers[int(grid[i-1][j])][1]
+#             print("Vkladam to do:", grid[i][j], "divam se na vazbu na", grid[i-1][j], "a hledam cisla", previous_tile_border_numbers)
 
 def create_big_square(grid_size, tile_size):
     len_size =  grid_size * tile_size
@@ -189,22 +350,26 @@ def create_big_square(grid_size, tile_size):
         big_grid.append(temp)
     return big_grid
     
-def populate_big_grid(big_grid, grid, tiles):
-    # print(grid)
-    for i in range(len(grid)):
-        for j in range(len(grid)):
-            # print(i,j,grid[i][j])
-            insert_individual_tile(big_grid, tiles, len(grid), i, j, grid[i][j])
+# def populate_big_grid(big_grid, grid, tiles):
+#     # print(grid)
+#     for i in range(len(grid)):
+#         for j in range(len(grid)):
+#             # print(i,j,grid[i][j])
+#             insert_individual_tile(big_grid, tiles, len(grid), i, j, grid[i][j])
 
-def insert_individual_tile(big_grid, tiles, number_squares, i, j, tile_no):
-    coord_x = i * int((len(big_grid) / number_squares))
-    coord_y = j * int((len(big_grid) / number_squares))  
-    rider = int((len(big_grid) / number_squares))
+def insert_individual_tile(big_grid, tiles, grid_len, i, j, tile_no, rotation_grid):
+    coord_x = i * int((len(big_grid) / grid_len))
+    coord_y = j * int((len(big_grid) / grid_len))  
+    rider = int((len(big_grid) / grid_len))
     # print("Vlozim kostku", tile_no)
     # print("Jeji obsah je", tiles[int(tile_no)])
+    rotated_tile = rotate_squares(tiles, rotation_grid, i, j, tile_no)
     for x in range(rider):
         for y in range(rider):
-            big_grid[coord_x + x][coord_y + y] = tiles[int(tile_no)][x+1][y+1]
+            big_grid[coord_x + x][coord_y + y] = rotated_tile[x+1][y+1]
+
+
+
 
 def create_border(grid, corners, g):
     create_top_border(grid, corners, g)
@@ -247,12 +412,12 @@ def fill_in_lines(grid, corners, g):
         for j in range(len(short_path)):
             grid[i][j] = short_path[j]
 
-def create_empty_grid(size):
+def create_empty_grid(size, dummy = 0):
     grid = []
     for i in range(size):
         temp = []
         for j in range(size):
-            temp.append(0)
+            temp.append(dummy)
         grid.append(temp)
     return grid
 
@@ -275,13 +440,13 @@ def get_tiles_numbers(tiles):
     tiles_numbers = {}
     for key, value in tiles.items():
         a = value[0]
-        b = value[9]
-        c = []
+        c = value[9]
+        b = []
         d = []
         for elem in value:
-            c.append(elem[0])
-            d.append(elem[9])       
-        tiles_numbers[key] = [convert_to_decimal(a), convert_to_decimal(b), convert_to_decimal(c), convert_to_decimal(d)], [convert_to_decimal(rev(a)), convert_to_decimal(rev(b)), convert_to_decimal(rev(c)), convert_to_decimal(rev(d))]
+            d.append(elem[0])
+            b.append(elem[9])       
+        tiles_numbers[key] = [convert_to_decimal(a), convert_to_decimal(b), convert_to_decimal(rev(c)), convert_to_decimal(rev(d))], [convert_to_decimal(c), convert_to_decimal(rev(b)), convert_to_decimal(rev(a)), convert_to_decimal(d)]
     # print(tiles_numbers)    
     return tiles_numbers
 
