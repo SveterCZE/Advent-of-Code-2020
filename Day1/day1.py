@@ -17,7 +17,7 @@ def part2():
         for j in range(i + 1, len(figure)):
             for k in range (i + 2, len(figure)):
                 if figure[i] + figure[j] + figure[k] == 2020:
-                    print (figure[i], figure[j], figure[k])
+                    # print (figure[i], figure[j], figure[k])
                     print (figure[i] * figure[j] * figure[k])
                     return
 
